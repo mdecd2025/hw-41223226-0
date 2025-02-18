@@ -12,7 +12,34 @@
 <p style="padding-left: 30px;">Homework (30%) - 每週至少提交兩次與課程進度有關的內容, 完成後填回自評表單</p>
 <p style="padding-left: 30px;">Exam (40%) - 建立包含操作流程影片、心得以及提供檔案下載的網頁後填回自評表單</p>
 <p style="padding-left: 30px;">Final Report (30%) - 利用網頁內容進行簡報並提交 pdf 格式書面報告, 完成後填回自評表單</p>
-<p></p><h1>Homework</h1>
+<p></p>
+<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">import requests
+
+# 下載2b.txt文件
+url = 'https://mde.tw/list/2b.txt'
+response = requests.get(url)
+data = response.text
+
+# 解析文件內容
+students = []
+lines = data.split('\n')
+for line in lines:
+    if line.strip():
+        student_id, github_username = line.split()
+        repo_url = f'https://github.com/{github_username}/{student_id}'
+        site_url = f'https://{github_username}.github.io/{student_id}'
+        students.append((student_id, repo_url, site_url))
+
+# 生成Markdown文件
+with open('students_repos.md', 'w', encoding='utf-8') as f:
+    f.write('# 學員倉儲列表\n\n')
+    for student_id, repo_url, site_url in students:
+        f.write(f'## {student_id} (repo)\n')
+        f.write(f'- GitHub: [{repo_url}]({repo_url})\n')
+        f.write(f'- 網站: [{site_url}]({site_url})\n\n')
+
+print('Markdown文件已生成：students_repos.md')</pre>
+<br/><br/>repo<h1>Homework</h1>
 <p>作業 (30%)</p>
 <p>HW1 (5%): <span style="background-color: #ffff00;">建立由 Box 組成的平面四連桿機構 Webots 模擬場景</span></p>
 <p style="padding-left: 30px;">part1:</p>
@@ -38,7 +65,8 @@
 <p>參考資料:</p>
 <p style="padding-left: 30px;"><a href="/downloads/fourbar_ball_throwing_linkage.slvs">fourbar_ball_throwing_linkage.slvs</a></p>
 <p style="padding-left: 30px;"><a href="/downloads/sixbar_ball_throwing_linkage.slvs">sixbar_ball_throwing_linkage.slvs</a></p>
-<p style="padding-left: 30px;"><img alt="" height="264" src="/images/fourbar_ball_throwing_linkage.gif" width="400"/></p><h2>HW1</h2>
+<p style="padding-left: 30px;"><img alt="" height="264" src="/images/fourbar_ball_throwing_linkage.gif" width="400"/></p>
+<h2>HW1</h2>
 <p>HW1 (5%): <span style="background-color: #ffff00;">建立由 Box 組成的平面四連桿機構 Webots 模擬場景</span></p>
 <p>操作影片標題: 國立虎尾科技大學 - 機械設計工程系 - cd2025 HW1 - 學員學號</p>
 <p></p>
