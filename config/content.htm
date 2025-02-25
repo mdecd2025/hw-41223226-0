@@ -94,7 +94,8 @@ brython_div1 &lt;= "附加連結: " + html.A("github.com", href="https://github.
 <p>    Ace1.run()</p>
 <p></p>
 <p># 修改顯示程式碼的按鈕名稱</p>
-<p>document["run1_button"].text = "小組名單"</p><h2>task1</h2>
+<p>document["run1_button"].text = "小組名單"</p>
+<h2>task1</h2>
 <p>2025/2/25</p>
 <p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/wMIB5kMsLx4" width="400"></iframe></p>
 <h2>task2</h2>
@@ -104,58 +105,7 @@ brython_div1 &lt;= "附加連結: " + html.A("github.com", href="https://github.
 <h2>task4</h2>
 <h2>task5</h2>
 <h2>task6</h2>
-<h1>小組名單</h1>
-<!-- 修改標題 -->
-<p><button id="show_group">顯示小組名單</button></p>
-<!-- 修改按鈕標籤 -->
-<p>
-<script type="text/python3">
-from browser import document as doc
-import ace
-
-# 清除畫布
-def clear_bd1(ev):
-    bd = doc["brython_div1"]
-    bd.clear()
-
-# 建立 Ace2 物件
-Ace2 = ace.Editor(editor_id="kw_editor1", console_id="kw_console1", container_id="kw__container1", storage_id="kw_py_src1")
-
-# 小組名單程式碼
-group_list_code = '''\
-# G3 小組名單
-group_members = [
-    "41223206",
-    "41223215",
-    "41223226",
-    "41223227",
-    "41223228",
-    "41223235"
-]
-
-# 顯示名單
-for member in group_members:
-    print(member)
-'''
-
-def show_group(ev):
-    Ace2.editor.setValue(group_list_code)
-    Ace2.editor.scrollToRow(0)
-    Ace2.editor.gotoLine(0)
-    Ace2.run()
-
-# 綁定按鈕事件
-doc["show_group"].bind('click', show_group)
-</script>
-</p>
-<!-- editor1 區域 -->
-<div id="kw_editor1" style="width: 600px; height: 300px;"></div>
-<!-- 存檔按鈕 --><form><label>Filename: <input id="kw_filename" placeholder="input file name" type="text"/>.py</label> <input onclick="doSave('kw_py_src1', 'kw_filename');" type="submit" value="Save"/></form><!-- 執行與清除按鈕 -->
-<p><button id="kw_run1">Run</button> <button id="kw_show_console1">Output</button> <button id="kw_clear_console1">清除輸出區</button> <button id="clear_bd1">清除繪圖區</button> <button onclick="window.location.reload()">Reload</button></p>
-<!-- 程式執行 output 區 -->
-<div style="width: 100%; height: 100%;"><textarea autocomplete="off" id="kw_console1"></textarea></div>
-<!-- Brython 程式執行結果 -->
-<div id="brython_div1"></div><h1>Homework</h1>
+<h1>Homework</h1>
 <p>作業 (30%)</p>
 <p>HW1 (5%): <span style="background-color: #ffff00;">建立由 Box 組成的平面四連桿機構 Webots 模擬場景</span></p>
 <p style="padding-left: 30px;">part1:</p>

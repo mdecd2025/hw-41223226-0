@@ -104,7 +104,104 @@ brython_div1 &lt;= "附加連結: " + html.A("github.com", href="https://github.
 <h2>task4</h2>
 <h2>task5</h2>
 <h2>task6</h2>
-<h1>Homework</h1>
+<h1>小組名單程式</h1>
+<!-- 修改標題 -->
+<p><button id="show_group_code">顯示小組名單程式</button></p>
+<!-- 顯示程式碼的按鈕 -->
+<p>
+<script type="text/python3">
+from browser import html, document
+import urllib.request
+
+# 設定 URL
+url = "https://mde.tw/list/2b.txt"
+
+# 讀取網站內容
+response = urllib.request.urlopen(url)
+data = response.read().splitlines()  # 直接讀取並按行分割
+
+# 確保資料存在
+if len(data) > 1:
+    all_stud = data[1:]  # 跳過標題列
+    print("總共有 " + str(len(all_stud)) + " 名學員")
+else:
+    all_stud = []
+    print("學員名單讀取失敗")
+
+# G3組的學員學號列表
+g3_students = ['41223206', '41223215', '41223226', '41223227', '41223228', '41223235']
+
+# 找到網頁中的特定位置
+brython_div1 = document["brython_div1"]
+
+# 將程式碼顯示在頁面上
+def show_group_code(ev):
+    brython_div1.clear()  # 清空之前的內容
+    # 顯示程式碼但不運行
+    program_code = """
+from browser import html, document
+import urllib.request
+
+# 設定 URL
+url = "https://mde.tw/list/2b.txt"
+
+# 讀取網站內容
+response = urllib.request.urlopen(url)
+data = response.read().splitlines()  # 直接讀取並按行分割
+
+# 確保資料存在
+if len(data) > 1:
+    all_stud = data[1:]  # 跳過標題列
+    print("總共有 " + str(len(all_stud)) + " 名學員")
+else:
+    all_stud = []
+    print("學員名單讀取失敗")
+
+# G3組的學員學號列表
+g3_students = ['41223206', '41223215', '41223226', '41223227', '41223228', '41223235']
+
+# 找到網頁中的特定位置
+brython_div1 = document["brython_div1"]
+
+# **動態插入 G3 組的學員資料，並為帳號添加超連結**
+def show_group_code(ev):
+    brython_div1.clear()  # 清空之前的內容
+    for index, student in enumerate(all_stud, start=1):
+        parts = student.split()  # 用空格分割學號和帳號
+        if len(parts) == 2:
+            student_id, account = parts
+            if student_id in g3_students:  # 只顯示G3組的學員
+                # 設定學號的超連結
+                account_link = f"https://mdecd2025.github.io/hw-{account.strip()}"
+                # 設定repo的超連結
+                repo_link = f"https://github.com/mdecd2025/hw-{account.strip()}"
+                
+                # 插入學號和帳號的超連結，並加上repo的超連結
+                brython_div1 <= f"{index}. " + html.A(student_id.strip(), href=account_link) + " " 
+                brython_div1 <= f"（" + html.A("repo", href=repo_link) + "）"
+                brython_div1 <= html.BR()  # 換行
+        else:
+            print(f"格式錯誤，跳過此行: {student}")
+    """
+    brython_div1 <= html.P(program_code)  # 顯示程式碼
+
+# 在頁面上添加一個 "Run" 按鈕來執行程式
+def run_program(ev):
+    exec(brython_div1.text)  # 執行顯示的程式碼
+
+# 綁定按鈕事件
+document["show_group_code"].bind("click", show_group_code)
+document["run_program"].bind("click", run_program)
+</script>
+</p>
+<!-- 顯示程式碼區域 -->
+<div id="brython_div1"></div>
+<!-- 按鈕區域 -->
+<p><button id="run_program">Run</button> <!-- 執行程式的按鈕 --></p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.11.3/brython.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    window.onload = function() { brython(); }  // 確保 Brython 啟動
+</script><h1>Homework</h1>
 <p>作業 (30%)</p>
 <p>HW1 (5%): <span style="background-color: #ffff00;">建立由 Box 組成的平面四連桿機構 Webots 模擬場景</span></p>
 <p style="padding-left: 30px;">part1:</p>
