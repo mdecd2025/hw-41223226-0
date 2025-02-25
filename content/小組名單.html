@@ -2,7 +2,7 @@
         <head>
         <title>cd_hw</title>
         <meta charset="utf-8">
-<meta property="head" content="H2">
+<meta property="head" content="H1">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="./../cmsimde/static/chimper/fonts/icomoon/style.css">
         <link rel="stylesheet" href="./../cmsimde/static/chimper/css/bootstrap.min.css">
@@ -142,10 +142,58 @@ img.add_border {
           </div>
           
         </header>
-    <div id="tipue_search_content">Exam2 << <a href='Exam2.html'>Previous</a> <a href='Final.html'>Next</a> >> Final<br /><h1>Exam3</h1>
-<p>Exam3 (20%): Webots 機電模擬場景的協同設計</p>
-<p>操作影片標題: 國立虎尾科技大學 - 機械設計工程系 - cd2025 Exam3 - 學員學號</p>
-<br />Exam2 << <a href='Exam2.html'>Previous</a> <a href='Final.html'>Next</a> >> Final</div>
+    <div id="tipue_search_content">task6 << <a href='task6.html'>Previous</a> <a href='Homework.html'>Next</a> >> Homework<br /><h1>小組名單</h1>
+<!-- 修改標題 -->
+<p><button id="show_group">顯示小組名單</button></p>
+<!-- 修改按鈕標籤 -->
+<p>
+<script type="text/python3">
+from browser import document as doc
+import ace
+
+# 清除畫布
+def clear_bd1(ev):
+    bd = doc["brython_div1"]
+    bd.clear()
+
+# 建立 Ace2 物件
+Ace2 = ace.Editor(editor_id="kw_editor1", console_id="kw_console1", container_id="kw__container1", storage_id="kw_py_src1")
+
+# 小組名單程式碼
+group_list_code = '''\
+# G3 小組名單
+group_members = [
+    "41223206",
+    "41223215",
+    "41223226",
+    "41223227",
+    "41223228",
+    "41223235"
+]
+
+# 顯示名單
+for member in group_members:
+    print(member)
+'''
+
+def show_group(ev):
+    Ace2.editor.setValue(group_list_code)
+    Ace2.editor.scrollToRow(0)
+    Ace2.editor.gotoLine(0)
+    Ace2.run()
+
+# 綁定按鈕事件
+doc["show_group"].bind('click', show_group)
+</script>
+</p>
+<!-- editor1 區域 -->
+<div id="kw_editor1" style="width: 600px; height: 300px;"></div>
+<!-- 存檔按鈕 --><form><label>Filename: <input id="kw_filename" placeholder="input file name" type="text"/>.py</label> <input onclick="doSave('kw_py_src1', 'kw_filename');" type="submit" value="Save"/></form><!-- 執行與清除按鈕 -->
+<p><button id="kw_run1">Run</button> <button id="kw_show_console1">Output</button> <button id="kw_clear_console1">清除輸出區</button> <button id="clear_bd1">清除繪圖區</button> <button onclick="window.location.reload()">Reload</button></p>
+<!-- 程式執行 output 區 -->
+<div style="width: 100%; height: 100%;"><textarea autocomplete="off" id="kw_console1"></textarea></div>
+<!-- Brython 程式執行結果 -->
+<div id="brython_div1"></div><br />task6 << <a href='task6.html'>Previous</a> <a href='Homework.html'>Next</a> >> Homework</div>
         
     <!-- footer -->
       <div class="container">
