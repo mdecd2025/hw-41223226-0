@@ -158,7 +158,68 @@ for index, student in enumerate(all_stud, start=1):
 <h2>task2</h2>
 <p>2025/2/25</p>
 <p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/9LfZ4pMLM9U" width="400"></iframe></p>
-<h2>task3</h2>
+<h3>w3</h3>
+<p><span>已知各班已經參與分組的學員 Github 帳號分別如下:</span></p>
+<pre class="brush:html;auto-links:false;toolbar:false" contenteditable="false">a_all_members = ['41223154', '41271125', '41271158', '41271146', '41271131', 'CYG41223103', '41223102', '41023128', '41023137', '41223137', '41223157', '41223156', 'otakuyoyo', '41223141', '41223113', 'kim41223114', 'joeisme1208', '41223116', '41223144', '41223140', '41223143', '41223138', '41223134', '41223136', 'zhe41223118', 'Spirit0224', 'yuhao-08', '41223158', 'Ren911308', '41223150', 'Manto8', 'CYA41223106', 'yan21ed', 'Lin41223107', '41223133', 'hong41223129', '41223110', '41223147', 'Linjiahong41223125', 'CHN41223132', 'Yu-Fang-Hong', '41023111', 'yckaooooo', 'kolas911205', '41023105', '40932134', '41223104', 'yan41223101', '41223105', '41223153', '41223120', '41223152', 'G8People', 'WSE41223112', '41223146', '41223119']
+b_all_members = ['41223251', '41223211', '41223245', '41223243', 'jjjay41223212', 'leeshaowei0716', '41223234', '41223209', '41223205', '41223201', '41223202', '41223208-hw', '41223216', '41223217', '41223248', 'emma0312', '41223242', '41223203', '41223144', '41223235', 'RAY41223215', 'hyy41223228', '41223227', '41223206', '41223226-0', 'Cloud41223237', 'Yujenchuang', '41223225', 'ljg41223220', 'supowen', 'jacky93111', '41223246', 'Liu41223244', '41223236', '41223219', '41271237', '41223249', '41223229', '41223224', '41223222', '41223231', 'linryan23', '41023114', '41223230', 'timluo123', 'CYC41223247', '41223218', 'ych0227', '41023215', '41023216', '41023213', '41071203', '41071204', '41071202', 'c-ching', 'YUN4', 'tseYU000', 'snowfall-killer', 'junpig10']</pre>
+<p><span>接著用程式列出目前各班尚未納組的學員學號。(<a href="https://mdecd2025.github.io/hw-41223226-0/content/Brython.html?src=https://gist.githubusercontent.com/41223226-0/5ebcc947596d725f38669bc87530b1f0/raw/1ccf707f0c0b006160ef9982801d2aedc2f30ccb/test_teamless_list.py">執行結果</a>)</span></p>
+<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from browser import html, document
+import urllib.request
+
+# 設定 URL
+url = "https://mde.tw/list/2b.txt"
+
+# 讀取網站內容
+response = urllib.request.urlopen(url)
+data = response.read().splitlines()  # 直接讀取並按行分割
+
+# 確保資料存在
+if len(data) &gt; 1:
+    all_stud = data[1:]  # 跳過標題列
+    print("總共有 " + str(len(all_stud)) + " 名學員")
+else:
+    all_stud = []
+    print("學員名單讀取失敗")
+
+# 已分組的帳號名單
+grouped_accounts = {
+    '41223251', '41223211', '41223245', '41223243', 'jjjay41223212', 'leeshaowei0716', 
+    '41223234', '41223209', '41223205', '41223201', '41223202', '41223208-hw', '41223216', 
+    '41223217', '41223248', 'emma0312', '41223242', '41223203', '41223144', '41223235', 
+    'RAY41223215', 'hyy41223228', '41223227', '41223206', '41223226-0', 'Cloud41223237', 
+    'Yujenchuang', '41223225', 'ljg41223220', 'supowen', 'jacky93111', '41223246', 'Liu41223244', 
+    '41223236', '41223219', '41271237', '41223249', '41223229', '41223224', '41223222', 
+    '41223231', 'linryan23', '41023114', '41223230', 'timluo123', 'CYC41223247', '41223218', 
+    'ych0227', '41023215', '41023216', '41023213', '41071203', '41071204', '41071202', 
+    'c-ching', 'YUN4', 'tseYU000', 'snowfall-killer', 'junpig10'
+}
+
+# 找到網頁中的特定位置
+brython_div1 = document["brython_div1"]
+
+# **動態插入未分組的學號與超連結**
+index = 1
+for student in all_stud:
+    parts = student.strip().split()  # 用空格分割
+    if len(parts) == 0:
+        continue  # 跳過空行
+    
+    student_id = parts[0]  # 學號
+    account = parts[1] if len(parts) &gt; 1 else student_id  # 若帳號空白則用學號當帳號
+
+    if account not in grouped_accounts:  # 只處理未分組帳號
+        # 設定學號的超連結
+        student_link = f"https://mdecd2025.github.io/hw-{account}"
+        # 設定repo的超連結
+        repo_link = f"https://github.com/mdecd2025/hw-{account}"
+        
+        # 插入學號作為超連結，並添加 repo 連結
+        brython_div1 &lt;= f"{index}. " + html.A(student_id, href=student_link) + " "
+        brython_div1 &lt;= f"（" + html.A("repo", href=repo_link) + "）"
+        brython_div1 &lt;= html.BR()  # 換行
+        index += 1</pre>
+<p></p>
+<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/nxPS6uj0Lp0" width="400"></iframe></p><h2>task3</h2>
 <h2>task4</h2>
 <h2>task5</h2>
 <h2>task6</h2>
