@@ -54,7 +54,50 @@ for index, student in enumerate(all_stud, start=1):
         print(f"格式錯誤，跳過此行: {student}")
 </pre>
 <p></p>
-<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/IcTQ1r1DgVc" width="400"></iframe></p><h1>Tasks</h1>
+<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/IcTQ1r1DgVc" width="400"></iframe></p>
+<h2>ipv6</h2>
+<p>任務一: 請用 Brython 寫出在 id="brython_div1" 嵌入 html 連結的程式。 希望各連結能透過 http 協定連結到班上有 66 位學員的靜態網頁。 其中各學員的固定 IPv6 分別為 2001:288:6004:17:fff1:cd25:0000:b001 到 2001:288:6004:17:fff1:cd25:0000:b066, 且使用 port 8000 進行連結. 請寫出此一 Brython 程式。</p>
+<p>任務二: 若各學員序號取自 https://mde.tw/cd2025/downloads/w4_2b_index.txt, 且此一資料以空白隔開序號加"." 及學號, 能否修改成以學員的學號作為 html 的標示。</p>
+<p>用之前寫的在repo的全班名單程式做修改，更換學號上的超連結來達成任務。(<a href="https://mdecd2025.github.io/hw-41223226-0/content/Brython.html?src=https://gist.githubusercontent.com/41223226-0/3aae1843d762e8f2b9bd40ad9d2fdc28/raw/c734a2ccafe0f56c67a7026f1878fc0bee99c626/ipv6_2b.py">執行結果</a>)</p>
+<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from browser import html, document
+import urllib.request
+ 
+# 設定 URL
+url = "https://mde.tw/list/2b.txt"
+ 
+# 讀取網站內容
+response = urllib.request.urlopen(url)
+data = response.read().splitlines()  # 直接讀取並按行分割
+ 
+# 確保資料存在
+if len(data) &gt; 1:
+    all_stud = data[1:]  # 跳過標題列
+    print("總共有 " + str(len(all_stud)) + " 名學員")
+else:
+    all_stud = []
+    print("學員名單讀取失敗")
+ 
+# 找到網頁中的特定位置
+brython_div1 = document["brython_div1"]
+ 
+# **動態插入所有學員資料，並為帳號添加超連結**
+for index, student in enumerate(all_stud, start=1):
+    parts = student.split()  # 用空格分割學號和帳號
+    if len(parts) == 2:
+        student_id, account = parts
+        # 設定學號的超連結（指向靜態網站）
+        account_link = f"http://[2001:288:6004:17:fff1:cd25:0000:b0{index}]:8000/"
+        # 設定repo的超連結
+        repo_link = f"https://github.com/mdecd2025/hw-{account.strip()}"
+         
+        # 插入學號和帳號的超連結，並加上repo的超連結
+        brython_div1 &lt;= f"{index}. " + html.A(student_id.strip(), href=account_link) + " "
+        brython_div1 &lt;= f"（" + html.A("repo", href=repo_link) + "）"
+        brython_div1 &lt;= html.BR()  # 換行
+    else:
+        print(f"格式錯誤，跳過此行: {student}")
+</pre>
+<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/4L31gQjAnyI" width="400"></iframe></p><h1>Tasks</h1>
 <p>task1 與 task2 任務目的在建立可於近端維護個人作業與協同作業的準備工作:</p>
 <p>      task1 (自行製作可攜程式系統)</p>
 <p>      task2 (使用 SSH 協定執行作業倉儲的推送)</p>
@@ -219,7 +262,8 @@ for student in all_stud:
         brython_div1 &lt;= html.BR()  # 換行
         index += 1</pre>
 <p></p>
-<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/nxPS6uj0Lp0" width="400"></iframe></p><h2>task3</h2>
+<p><iframe allowfullscreen="allowfullscreen" height="314" src="//www.youtube.com/embed/nxPS6uj0Lp0" width="400"></iframe></p>
+<h2>task3</h2>
 <h2>task4</h2>
 <h2>task5</h2>
 <h2>task6</h2>
