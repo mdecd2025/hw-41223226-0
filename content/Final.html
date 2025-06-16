@@ -151,107 +151,99 @@ img.add_border {
 <p>請將期末協同專案執行過程、內容與心得, 製作成影片，配合字幕上傳至 Youtube 後嵌入各階段的期末報告頁面中.</p>
 <p><strong>fourbar_controller.py</strong></p>
 <pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from controller import Robot, Keyboard
+import time
 
-# 常數設定
-TIME_STEP = 32  # 模擬步長 (ms)
-MAX_VELOCITY = 10.0  # 馬達最大速度
-ANGLE_STEP = 40 * 3.14159 / 180  # 40度轉弧度
-POSITION_M = ANGLE_STEP  # 馬達目標位置 +40度
-POSITION_K = 0.0         # 馬達目標位置 0度
+# 常數定義
+TIME_STEP = 32  # 模擬步長，單位毫秒
+MAX_VELOCITY = 10.0  # 輪子的最大速度
+ANGLE_STEP = 40 * 3.14159 / 180  # 40 度轉為弧度，作為擊球角度
+POSITION_M = ANGLE_STEP          # motor 擊出角度（+40度）
+POSITION_K = 0.0                 # motor 收回角度（0度）
+KICK_DELAY = 0.5                 # 擊出後等待時間（秒）
 
-# 初始化機器人、鍵盤
+# 初始化機器人與鍵盤控制
 robot = Robot()
 timestep = int(robot.getBasicTimeStep())
 keyboard = Keyboard()
-keyboard.enable(timestep)
+keyboard.enable(timestep)  # 啟用鍵盤事件監聽
 
-# 嘗試初始化馬達與感測器
-mechanism_enabled = False
-motor = None
-sensor = None
+# 嘗試取得 motor 與對應的感測器
 try:
-    motor = robot.getDevice('motor1')
-    sensor = robot.getDevice('motor1_sensor')
+    motor = robot.getDevice('motor1')  # 擊球機構用的伺服馬達
+    sensor = robot.getDevice('motor1_sensor')  # 馬達的位置感測器
     sensor.enable(timestep)
-    mechanism_enabled = True
-except Exception as e:
-    print(f"機構控制裝置初始化失敗: {e}")
+    mechanism_enabled = True  # 如果取得成功，表示擊球裝置可用
+except Exception:
+    mechanism_enabled = False  # 否則關閉機構功能
 
-# 嘗試初始化輪子馬達
-platform_enabled = False
-wheels = []
+# 嘗試取得輪子馬達（移動平台）
 try:
-    wheels = [robot.getDevice(f"wheel{i+1}") for i in range(4)]
+    wheels = [robot.getDevice(f"wheel{i+1}") for i in range(4)]  # 四個輪子馬達
     for wheel in wheels:
-        wheel.setPosition(float('inf'))  # 無限位置啟動速度控制
-        wheel.setVelocity(0)
-    platform_enabled = True
-except Exception as e:
-    print(f"平台控制裝置初始化失敗: {e}")
+        wheel.setPosition(float('inf'))  # 設定為速度控制模式（非位置控制）
+        wheel.setVelocity(0)  # 初始速度為 0
+    platform_enabled = True  # 若成功取得，表示移動平台可用
+except Exception:
+    platform_enabled = False
 
-# 狀態機，用來控制 M / K 的切換（避免重複觸發）
-current_state = "allow_m"
+# 用來避免重複偵測按鍵（去彈跳）
+key_pressed = {
+    'k': False
+}
 
-# 防止長按重複觸發的旗標
-key_pressed = {'m': False, 'k': False}
-
-def stop_wheels():
-    for w in wheels:
-        w.setVelocity(0)
-
-print("控制開始，使用方向鍵移動，M/K控制機構，Q退出")
-
+# 主循環
 while robot.step(timestep) != -1:
-    key = keyboard.getKey()
+    key = keyboard.getKey()  # 讀取目前按下的按鍵
 
-    # 平台控制
+    # 平台移動控制（如果有輪子）
     if platform_enabled:
         if key == Keyboard.UP:
-            for w in wheels:
-                w.setVelocity(MAX_VELOCITY)
+            # 向前
+            for wheel in wheels:
+                wheel.setVelocity(MAX_VELOCITY)
         elif key == Keyboard.DOWN:
-            for w in wheels:
-                w.setVelocity(-MAX_VELOCITY)
+            # 向後
+            for wheel in wheels:
+                wheel.setVelocity(-MAX_VELOCITY)
         elif key == Keyboard.LEFT:
-            # 左輪後退，右輪前進
-            wheels[0].setVelocity(-MAX_VELOCITY)
-            wheels[1].setVelocity(MAX_VELOCITY)
-            wheels[2].setVelocity(-MAX_VELOCITY)
-            wheels[3].setVelocity(MAX_VELOCITY)
-        elif key == Keyboard.RIGHT:
-            # 左輪前進，右輪後退
+            # 左轉（右輪正轉，左輪反轉）
             wheels[0].setVelocity(MAX_VELOCITY)
             wheels[1].setVelocity(-MAX_VELOCITY)
             wheels[2].setVelocity(MAX_VELOCITY)
             wheels[3].setVelocity(-MAX_VELOCITY)
-        elif key in (ord('Q'), ord('q')):
+        elif key == Keyboard.RIGHT:
+            # 右轉（左輪正轉，右輪反轉）
+            wheels[0].setVelocity(-MAX_VELOCITY)
+            wheels[1].setVelocity(MAX_VELOCITY)
+            wheels[2].setVelocity(-MAX_VELOCITY)
+            wheels[3].setVelocity(MAX_VELOCITY)
+        elif key == ord('Q') or key == ord('q'):
+            # 按 Q 鍵退出程式
             print("Exiting...")
             break
         else:
-            stop_wheels()
+            # 沒有按方向鍵時停止移動
+            for wheel in wheels:
+                wheel.setVelocity(0)
 
-    # 機構控制
+    # 擊球機構控制（如果有 motor）
     if mechanism_enabled:
-        motor_pos = sensor.getValue()
-        # print(f"Motor pos: {motor_pos:.3f}")  # 除錯用
-        
-        # 按下 M，移動到 +40 度，且只有當狀態允許時觸發
-        if key in (ord('M'), ord('m')):
-            if not key_pressed['m'] and current_state == "allow_m":
-                motor.setPosition(POSITION_M)
-                current_state = "allow_k"
-            key_pressed['m'] = True
-        else:
-            key_pressed['m'] = False
+        if key == ord('M') or key == ord('k'):
+            if not key_pressed['M']:
+                print("[KICK] 出擊 → 收回")
+                motor.setPosition(POSITION_M)  # 設定擊球角度（出擊）
 
-        # 按下 K，回到 0 度，且只有當狀態允許時觸發
-        if key in (ord('K'), ord('k')):
-            if not key_pressed['k'] and current_state == "allow_k":
-                motor.setPosition(POSITION_K)
-                current_state = "allow_m"
-            key_pressed['k'] = True
+                # 非阻塞式等待 0.5 秒（等待擊球完成）
+                start_time = robot.getTime()
+                while robot.step(timestep) != -1:
+                    if robot.getTime() - start_time &gt;= KICK_DELAY:
+                        break
+
+                motor.setPosition(POSITION_K)  # 收回擊球機構
+            key_pressed['M'] = True  # 記錄已按下
         else:
-            key_pressed['k'] = False</pre>
+            key_pressed['M'] = False  # 沒有按鍵，重設狀態
+</pre>
 <p><strong>feed_ball.py</strong></p>
 <pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from controller import Supervisor, Keyboard
 import time
@@ -510,39 +502,50 @@ if __name__ == "__main__":
     supervisor = Supervisor()
     ball_manager = BallManager(supervisor)
     ball_manager.run()</pre>
-<p><strong>stand_controller.py</strong></p>
-<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from controller import Robot, Keyboard
+<p><strong>basket.py</strong></p>
+<pre class="brush:py;auto-links:false;toolbar:false" contenteditable="false">from controller import Robot, Keyboard, Emitter  # 匯入 Webots 控制所需的模組
 
 # 常數設定
-WHEEL_RADIUS = 0.1  # 輪子半徑(公尺)
-ROBOT_LENGTH_HALF = 0.471  # 機器人長度一半(公尺)
-ROBOT_WIDTH_HALF = 0.376  # 機器人寬度一半(公尺)
-MAX_VELOCITY = 10.0  # 馬達最大速度
+WHEEL_RADIUS = 0.1  # 輪子半徑（單位：公尺）
+L = 0.471  # 機器人長度的一半（用於運動學計算）
+W = 0.376  # 機器人寬度的一半
+MAX_VELOCITY = 10.0  # 輪子最大速度
 
-# 初始化機器人與時間步長
+# 初始化機器人與鍵盤
 robot = Robot()
-timestep = int(robot.getBasicTimeStep())
-
-# 初始化距離感測器並啟用
-distance_sensor = robot.getDevice('sensor')
-distance_sensor.enable(timestep)
-
-# 初始化鍵盤並啟用
+timestep = int(robot.getBasicTimeStep())  # 取得模擬的時間步長
 keyboard = Keyboard()
-keyboard.enable(timestep)
+keyboard.enable(timestep)  # 啟用鍵盤控制
 
-# 初始化輪子馬達並設為速度控制模式
-wheels = {
-    'front_right': robot.getDevice("wheel5"),
-    'front_left': robot.getDevice("wheel6"),
-    'rear_right': robot.getDevice("wheel7"),
-    'rear_left': robot.getDevice("wheel8")
-}
-for wheel in wheels.values():
-    wheel.setPosition(float('inf'))  # 無限位置控制速度模式
-    wheel.setVelocity(0)  # 初始速度0
+# 取得發射器裝置，用來傳送得分
+emitter = robot.getDevice("score_emitter")
 
-# AD值對應距離的查表(線性插值用)
+# 取得距離感測器裝置
+sensor = robot.getDevice('sensor')
+sensor.enable(timestep)  # 啟用感測器
+score = 0  # 初始得分為 0
+last_score_time = 0  # 上一次得分的時間
+cooldown = 1.0  # 冷卻時間（秒）
+
+# 取得四個輪子的馬達裝置
+wheel5 = robot.getDevice("wheel5")  # 右前輪
+wheel6 = robot.getDevice("wheel6")  # 左前輪
+wheel7 = robot.getDevice("wheel7")  # 右後輪
+wheel8 = robot.getDevice("wheel8")  # 左後輪
+
+# 啟用速度控制模式（無限位置）
+for wheel in [wheel5, wheel6, wheel7, wheel8]:
+    wheel.setPosition(float('inf'))  # 設定馬達為無限轉動模式
+    wheel.setVelocity(0)  # 初始速度為 0
+
+# 設定四個輪子的速度
+def set_wheel_velocity(v1, v2, v3, v4):
+    wheel5.setVelocity(v1)
+    wheel6.setVelocity(v2)
+    wheel7.setVelocity(v3)
+    wheel8.setVelocity(v4)
+
+# A/D 轉換值對應距離的查表（模擬非線性感測器）
 lookup_table = [
     (1000, 0.00),
     (620, 0.12),
@@ -552,94 +555,74 @@ lookup_table = [
     (0, 0.18)
 ]
 
+# 將感測器讀到的 AD 值轉換為距離（內插法）
 def ad_to_distance(ad_value):
-    """用線性插值將感測器AD值轉換成距離(公尺)"""
-    for i in range(len(lookup_table)-1):
+    for i in range(len(lookup_table) - 1):
         a0, d0 = lookup_table[i]
-        a1, d1 = lookup_table[i+1]
-       if a0 &gt;= ad_value &gt;= a1:
+        a1, d1 = lookup_table[i + 1]
+        if a1 &lt;= ad_value &lt;= a0:
             return d0 + (d1 - d0) * (ad_value - a0) / (a1 - a0)
     if ad_value &gt; lookup_table[0][0]:
-        return lookup_table[0][1]
-    return lookup_table[-1][1]
+        return lookup_table[0][1]  # 超出最大值時回傳最小距離
+    return lookup_table[-1][1]  # 小於最小 AD 值時回傳最大距離
 
-def set_all_wheel_velocity(v):
-    """設定所有輪子相同速度"""
-    for wheel in wheels.values():
-        wheel.setVelocity(v)
+# 顯示操作說明
+print("Controls:")
+print("U = forward, J = backward, H = turn left, K = turn right, Q = quit")
 
-def set_wheel_velocities(v_front_right, v_front_left, v_rear_right, v_rear_left):
-    """設定四個輪子的速度"""
-    wheels['front_right'].setVelocity(v_front_right)
-    wheels['front_left'].setVelocity(v_front_left)
-    wheels['rear_right'].setVelocity(v_rear_right)
-    wheels['rear_left'].setVelocity(v_rear_left)
-
-# 按鍵與對應的動作(函式)對應表
-def move_forward():
-    set_all_wheel_velocity(MAX_VELOCITY)
-
-def move_backward():
-    set_all_wheel_velocity(-MAX_VELOCITY)
-
-def turn_right():
-    set_wheel_velocities(-MAX_VELOCITY, MAX_VELOCITY, -MAX_VELOCITY, MAX_VELOCITY)
-
-def turn_left():
-    set_wheel_velocities(MAX_VELOCITY, -MAX_VELOCITY, MAX_VELOCITY, -MAX_VELOCITY)
-
-def stop():
-    set_all_wheel_velocity(0)
-
-key_action_map = {
-    ord('E'): move_forward,
-    ord('e'): move_forward,
-    ord('X'): move_backward,
-    ord('x'): move_backward,
-    ord('D'): turn_right,
-    ord('d'): turn_right,
-    ord('S'): turn_left,
-    ord('s'): turn_left
-}
-
-# 計分相關變數
-score = 0
-last_score_time = 0
-score_cooldown = 1.0  # 冷卻時間(秒)
-
-print("控制說明：")
-print("E: 前進, X: 後退, S: 左轉, D: 右轉, Q: 退出")
-print("M或K鍵可查看目前距離感測器數值")
-
+# 主迴圈
+keys = set()
 while robot.step(timestep) != -1:
-    key = keyboard.getKey()
-    sensor_value = distance_sensor.getValue()
+    key = keyboard.getKey()  # 讀取按鍵輸入
+    while key != -1:
+        keys.add(key)
+        key = keyboard.getKey()
+
+    # 取得感測器數值並轉換為距離
+    sensor_value = sensor.getValue()
     distance = ad_to_distance(sensor_value)
     current_time = robot.getTime()
 
-    # 調試用：印出距離值
-    if key in [ord('M'), ord('m'), ord('K'), ord('k')]:
-        print(f"距離感測器讀值: {distance:.3f} 公尺")
+    # 如果按下 M 或 K，顯示目前距離
+    if ord('M') in keys or ord('m') in keys:
+        print("Distance (M):", distance)
+    if ord('K') in keys or ord('k') in keys:
+        print("Distance (K):", distance)
 
-    # 判斷是否得分(距離小於門檻且冷卻時間已過)
-    if distance &lt; 0.11 and (current_time - last_score_time) &gt; score_cooldown:
+    # 如果距離小於 0.18 且符合冷卻時間，則得分 +2
+    if distance &lt; 0.18 and (current_time - last_score_time) &gt; cooldown:
         score += 2
         last_score_time = current_time
-        print(f"得分! 總分: {score}, 距離: {distance:.3f}")
+        print("得分 +2")
+        print("Current Distance:", distance)
+        emitter.send(str(2))  # 傳送得分資料給其他模組或使用者介面
 
-    # 按鍵操作
-    if key in key_action_map:
-        key_action_map[key]()
-    elif key in [ord('Q'), ord('q')]:
-        print("離開程式中...")
+    # 控制移動
+    if ord('U') in keys or ord('u') in keys:
+        # 前進
+        set_wheel_velocity(MAX_VELOCITY, MAX_VELOCITY, MAX_VELOCITY, MAX_VELOCITY)
+    elif ord('J') in keys or ord('j') in keys:
+        # 後退
+        set_wheel_velocity(-MAX_VELOCITY, -MAX_VELOCITY, -MAX_VELOCITY, -MAX_VELOCITY)
+    elif ord('K') in keys or ord('k') in keys:
+        # 向右轉（右輪倒轉，左輪前進）
+        set_wheel_velocity(-MAX_VELOCITY, MAX_VELOCITY, -MAX_VELOCITY, MAX_VELOCITY)
+    elif ord('H') in keys or ord('h') in keys:
+        # 向左轉（左輪倒轉，右輪前進）
+        set_wheel_velocity(MAX_VELOCITY, -MAX_VELOCITY, MAX_VELOCITY, -MAX_VELOCITY)
+    elif ord('Q') in keys or ord('q') in keys:
+        # 結束程式
+        print("Exiting...")
         break
     else:
-        # 無按鍵，停止輪子
-        stop()</pre>
+        # 沒有按任何鍵時停止
+        set_wheel_velocity(0, 0, 0, 0)
+
+    keys.clear()  # 清除本次讀取的按鍵</pre>
 <p><a href="./../downloads/final project (4).7z">Final_Project</a></p>
 <p>心得:</p>
 <p data-end="233" data-start="111">這次的專案我負責了三個主要程式：fourbar_controller.py、feed_ball.py 以及 stand_controller.py。透過這些程式，我深入了解了機械四連桿機構的控制邏輯與實作方式，以及機器人自動化執行任務的流程。</p>
-<p data-end="425" data-start="235">在 fourbar_controller.py 中，我學會如何運用程式來控制四連桿的運動，精確調整各關節的角度，使機構能穩定且連續地執行動作。feed_ball.py 則讓我體會到自動化流程中，如何設計餵球機制，包含感測器偵測與馬達驅動的配合，確保物料能順利送達。stand_controller.py 則著重於整體系統的協調與穩定控制，使機器在任務完成後能正確回到待命狀態。</p>
+<p data-end="425" data-start="235">在 fourbar_controller.py 中，我學會如何運用程式來調整四連桿的位置，精確調整各關節的角度，使機構能穩定且連續地執行動作。feed_ball.py 則讓我體會到自動化流程中，如何設計餵球機制，包含感測器偵測與馬達驅動的配合，確保物料能順利送達。</p>
 <p data-end="557" data-start="427">整體而言，這次專案讓我不僅增強了程式撰寫能力，也加深對機械結構控制的理解。面對實務挑戰時，需要同時考慮軟體邏輯與硬體機構的整合，這對我未來的工程學習與專題開發都有很大幫助。未來我希望能將這些經驗延伸到更複雜的機械系統設計中，持續提升系統穩定性與自動化效率。</p>
 <p data-end="557" data-start="427"></p>
 <p>影片標題: <span style="background-color: #ffff00;">國立虎尾科技大學 - 機械設計工程系 - cd2025 期末報告 - 學員學號 - 各階段影片主題<br/></span></p><br />Exam3 << <a href='Exam3.html'>Previous</a> <a href='Brython.html'>Next</a> >> Brython</div>
